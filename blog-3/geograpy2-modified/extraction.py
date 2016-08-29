@@ -52,8 +52,9 @@ class Extractor(object):
         nltk.download('maxent_ne_chunker')
         nltk.download('words')
         pos_tag = nltk.pos_tag(text)
+        nes = nltk.ne_chunk(pos_tag)
 
-        return pos_tag
+        return nes
         
 
     def find_entities(self):
@@ -61,7 +62,9 @@ class Extractor(object):
         """
         nes = self.named_entities() 
         for ne in nes:
-            if "NNP" in ne[1]:
-                if ' ' in ne[0]:
-                    ne[0] = ne[0].replace(' ', ',')
-                self.places.append(ne[0])
+            if "NNP" in ne[0]:
+                print(ne.leaves())
+                print('ORGANIZATION' in ne)
+                self.places.append(u' '.join([i[0] for i in ne.leaves()]))
+                print("places noww")
+                print(self.places)

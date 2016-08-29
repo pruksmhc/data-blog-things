@@ -39,7 +39,7 @@ def get_data(category,):
         f.close()
         if 'page' in url:
             url.split('page')[0]
-            url = url + 'page/' + page_number
+            url = url + 'page/' + str(page_number)
         else: 
             url = url + 'page/2/'
         page_number  = page_number + 1
@@ -49,20 +49,21 @@ def get_data(category,):
             break
 
 # Getting the countries from the text
-def get_place_context(url, dirname, text=None):
-
-    f = open(dirname + 'blog-3/geograpy2/data/output_new', "w"); 
-    f.write('')
-    f.close()
+def get_place_context(url, countries_noun, text=None):
     e = Extractor(url=url, text=text)
     e.find_entities()
     pc = PlaceContext(e.places) 
-    pc.set_countries()
-    output_str = ""
-    countries = pc.countries
-    country_str = ','.join([i for i in pc.countries])
-    f = open(dirname +'blog-3/geograpy2-modified/data/output_new', 'a'); 
-    f.write(country_str)
+    if countries_noun == 'country':
+        pc.set_countries()
+        output_str = ""
+        countries = pc.countries
+        output_str = ','.join([i for i in pc.countries])
+    else:
+        output_str  = ','.join([i.encode('utf8') for i in e.places])
+    if output_str != '':
+        output_str = output_str + ','
+    f = open('./data/output_new', 'a')
+    f.write(output_str)
     f.close()
     return pc
 
@@ -166,19 +167,23 @@ class PlaceContext(object):
 
 if __name__ == "__main__":
     category = sys.argv[1]
-    dirname = sys.argv[2]
-    get_data(cateogry)
+    country_noun = sys.argv[2]
+    f = open("./data/output_new", "w"); 
+    f.write('')
+    f.close()
+    get_data(category)
     with open("./data/output", "r") as file:
         for url in csv.reader(file):
-            get_place_context(url[0], dirname)
+            get_place_context(url[0], country_noun)
     with open("./data/output_new", "r") as file:
         table = {}
         for line in csv.reader(file):
             for place in line:
-                if place in table.keys():
-                    table[place] = table[place] + 1
-                else: 
-                    table[place] = 1
+                if place != '':
+                    if place in table.keys():
+                        table[place] = table[place] + 1
+                    else: 
+                        table[place] = 1
     with open('./data/output_final.csv', 'w') as f:
             w = csv.DictWriter(f, table.keys())
             w.writeheader()
